@@ -1,0 +1,66 @@
+# UAT TESTING ONLY
+from selenium import webdriver
+from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium.webdriver.common import keys
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import select
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.action_chains import ActionChains
+import time
+
+# defines Chrome location and chromedriver for Selenium. maximizes window
+PATH = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+driver = webdriver.Chrome(executable_path="C:\\Users\\ToroCD01\\AppData\\Local\\Programs\\Python\\Python39\\chromedriver.exe")
+driver.maximize_window()
+
+# directs Chrome to SC website
+driver.get("https://uat-supplychain.compass-usa.com/Registration/Login?ReturnUrl=%2FCanada")
+
+# clicks on "Supply Chain" button
+driver.find_element_by_css_selector('[class="ic-button-text v-button-text"]').click()
+
+# enters credentials to login to SC
+#region
+UserName = driver.find_element_by_name('UserName')
+UserName.send_keys("dtorocolombo@foodbuy.com")
+Password = driver.find_element_by_name('Password')
+Password.send_keys("Alimoche5")
+driver.find_element_by_css_selector('[class="submit"]').click()
+#endregion
+
+# go to specific period per URL
+#region
+driver.get("https://uat-supplychain.compass-usa.com/Canada/ManufacturerCoreTermPeriod/Edit/21604")
+driver.find_element_by_css_selector('[class="k-widget k-dropdown ic-can-be-dirty"]').click()
+time.sleep(1)
+#endregion
+
+# changes expiration period according to entered text and saves
+#region
+ddelement = driver.find_element_by_xpath("//*[text()='October 2021']")
+action = ActionChains(driver)
+action.click(on_element=ddelement).perform()
+driver.find_element(By.ID, "ButtonSave").click()
+time.sleep(5)
+#endregion
+
+# opens corresponding core and creates next period
+#region
+driver.find_element_by_xpath("//*[contains(@href,'Canada/ManufacturerCoreTerm/Edit/')]").click()
+time.sleep(5)
+driver.find_element(By.ID, "ButtonCreatePeriod").click()
+time.sleep(1)
+driver.find_element(By.ID, "NoExpiration").click()
+time.sleep(1)
+driver.find_element_by_css_selector('[class="k-widget k-dropdown shorterDropDown"]').click()
+time.sleep(1)
+driver.find_element_by_xpath("//div[@id='MfrCoreTermExpirationPeriodKey-list']//li[text()='January 2026']").click()
+time.sleep(1)
+driver.find_element_by_css_selector('[class="k-widget k-dropdown WiderDropDown"]').send_keys(Keys.DOWN)
+time.sleep(3)
+driver.find_element(By.ID, "ButtonCreatePeriodSave").click()
+#endregion
+
+time.sleep(30)
