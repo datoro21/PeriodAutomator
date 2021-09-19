@@ -1,3 +1,11 @@
+# The main goal of this program is to expire current periods provided by a URL in a CSV file according to an input month,
+# then going to the Core termset and creating a new period which begins the month after the current one has been expired.
+# The expiration date of the new period is also an input. The program then creates a new period and assigns a comment in 
+# Supply Chain. Once completed, the program will loop through any other URLs provided in the CSV referenced on the code.
+# Once completed, the program shuts down and periods are created.
+
+# next version will include a way to copy the new MCP (new period code) into a separate CSV file.
+
 # UAT TESTING ONLY
 
 from os import X_OK
