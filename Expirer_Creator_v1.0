@@ -1,17 +1,25 @@
 # UAT TESTING ONLY
+
+from os import X_OK
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common import keys
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import select
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.chrome.options import Options
 import time
+import csv
+import os
 
 # defines Chrome location and chromedriver for Selenium. maximizes window
-PATH = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+Chrome = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+chrome_options = webdriver.ChromeOptions()
 driver = webdriver.Chrome(executable_path="C:\\Users\\ToroCD01\\AppData\\Local\\Programs\\Python\\Python39\\chromedriver.exe")
 driver.maximize_window()
 
@@ -19,7 +27,7 @@ driver.maximize_window()
 driver.get("https://uat-supplychain.compass-usa.com/Registration/Login?ReturnUrl=%2FCanada")
 
 # clicks on "Supply Chain" button
-driver.find_element_by_css_selector('[class="ic-button-text v-button-text"]').click()
+WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//*[@class='ic-button-text v-button-text']"))).click()
 
 # enters credentials to login to SC
 #region
@@ -30,37 +38,64 @@ Password.send_keys("Alimoche5")
 driver.find_element_by_css_selector('[class="submit"]').click()
 #endregion
 
-# go to specific period per URL
-#region
-driver.get("https://uat-supplychain.compass-usa.com/Canada/ManufacturerCoreTermPeriod/Edit/21604")
-driver.find_element_by_css_selector('[class="k-widget k-dropdown ic-can-be-dirty"]').click()
-time.sleep(1)
-#endregion
+path_to_csv = ("C:\\Users\\ToroCD01\\Desktop\\Python\\Period URLs.csv")
+driver.implicitly_wait(30)
 
-# changes expiration period according to entered text and saves
-#region
-ddelement = driver.find_element_by_xpath("//*[text()='October 2021']")
-action = ActionChains(driver)
-action.click(on_element=ddelement).perform()
-driver.find_element(By.ID, "ButtonSave").click()
-time.sleep(5)
-#endregion
+def refresh_with_alert(driver):
+    try: 
+        WebDriverWait(driver, 10).until(EC.alert_is_present())
+        driver.switch_to.alert.accept()
+    except TimeoutException:
+        print("No alert was present.")
 
-# opens corresponding core and creates next period
-#region
-driver.find_element_by_xpath("//*[contains(@href,'Canada/ManufacturerCoreTerm/Edit/')]").click()
-time.sleep(5)
-driver.find_element(By.ID, "ButtonCreatePeriod").click()
-time.sleep(1)
-driver.find_element(By.ID, "NoExpiration").click()
-time.sleep(1)
-driver.find_element_by_css_selector('[class="k-widget k-dropdown shorterDropDown"]').click()
-time.sleep(1)
-driver.find_element_by_xpath("//div[@id='MfrCoreTermExpirationPeriodKey-list']//li[text()='January 2026']").click()
-time.sleep(1)
-driver.find_element_by_css_selector('[class="k-widget k-dropdown WiderDropDown"]').send_keys(Keys.DOWN)
-time.sleep(3)
-driver.find_element(By.ID, "ButtonCreatePeriodSave").click()
-#endregion
+with open(path_to_csv, 'r') as mycsv:
+    reader = csv.reader(mycsv)
+    for row in reader:
+        urlstring = row[0]
+        driver.get(urlstring)
+        driver.find_element_by_css_selector('[class="k-widget k-dropdown ic-can-be-dirty"]').click()
+        time.sleep(1)
 
-time.sleep(30)
+        #ENTER EXPIRY MONTH OF CURRENT PERIOD
+        CurrentPeriodExp = str('October 2022')
+        
+        #FUTURE EXPIRY MONTH OF NEW PERIOD
+        FuturePeriodExp = str('December 2022')
+        NewPeriodComment = str('Code Test')
+
+        # changes expiration period according to entered text and saves
+        ddelement = driver.find_element_by_xpath("//*[text()='" + CurrentPeriodExp + "']")
+        action = ActionChains(driver)
+        action.click(on_element=ddelement).perform()
+        current_url = driver.current_url
+        driver.find_element(By.ID, "ButtonSave").click()
+        driver.find_element(By.ID, "ButtonSave").click()
+        refresh_with_alert(driver)
+        
+        # opens corresponding core and creates next period
+        WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "a[href*='ManufacturerCoreTerm/Edit/']")))
+        time.sleep(1)
+        driver.find_element(By.CSS_SELECTOR, "a[href*='ManufacturerCoreTerm/Edit/']").click()
+        time.sleep(0.5)
+        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//button[@id='ButtonCreatePeriod']"))).click()
+        time.sleep(0.5)
+        WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.ID, "NoExpiration"))).click()
+        time.sleep(0.5)
+        WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By. XPATH, "//*[@class='k-widget k-dropdown shorterDropDown']"))).click()
+        time.sleep(0.5)
+        driver.find_element_by_xpath("//div[@id='MfrCoreTermExpirationPeriodKey-list']//li[text()='" + FuturePeriodExp + "']").click()
+        time.sleep(0.5)
+        WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By. XPATH, "//*[@class='k-widget k-dropdown WiderDropDown']"))).send_keys(Keys.DOWN)
+        time.sleep(0.5)
+        WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.ID, "ButtonCreatePeriodSave"))).click()
+        time.sleep(0.5)
+        driver.refresh()
+        WebDriverWait(driver, 500).until(EC.presence_of_element_located((By.ID, "AddCommentButton"))).click()
+        time.sleep(0.5)
+        driver.find_element(By.ID, "commentText").click()
+        action2 = ActionChains(driver)
+        action2.send_keys(NewPeriodComment)
+        action2.perform()
+        time.sleep(0.5)
+        driver.find_element(By.ID, "CommentSaveButton").click()
+        time.sleep(0.5)
