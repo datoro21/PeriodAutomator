@@ -40,9 +40,9 @@ WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//*[@clas
 # enters credentials to login to SC
 #region
 UserName = driver.find_element_by_name('UserName')
-UserName.send_keys("dtorocolombo@foodbuy.com")
+UserName.send_keys("Username")
 Password = driver.find_element_by_name('Password')
-Password.send_keys("Alimoche5")
+Password.send_keys("Password")
 driver.find_element_by_css_selector('[class="submit"]').click()
 #endregion
 
