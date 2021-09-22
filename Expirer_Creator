@@ -1,12 +1,10 @@
+# UAT TESTING ONLY
+
 # The main goal of this program is to expire current periods provided by a URL in a CSV file according to an input month,
 # then going to the Core termset and creating a new period which begins the month after the current one has been expired.
 # The expiration date of the new period is also an input. The program then creates a new period and assigns a comment in 
 # Supply Chain. Once completed, the program will loop through any other URLs provided in the CSV referenced on the code.
 # Once completed, the program shuts down and periods are created.
-
-# next version will include a way to copy the new MCP (new period code) into a separate CSV file.
-
-# UAT TESTING ONLY
 
 from os import X_OK
 from selenium import webdriver
@@ -40,9 +38,9 @@ WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//*[@clas
 # enters credentials to login to SC
 #region
 UserName = driver.find_element_by_name('UserName')
-UserName.send_keys("Username")
+UserName.send_keys("username")
 Password = driver.find_element_by_name('Password')
-Password.send_keys("Password")
+Password.send_keys("password")
 driver.find_element_by_css_selector('[class="submit"]').click()
 #endregion
 
@@ -54,7 +52,7 @@ def refresh_with_alert(driver):
         WebDriverWait(driver, 10).until(EC.alert_is_present())
         driver.switch_to.alert.accept()
     except TimeoutException:
-        print("No alert was present.")
+        print("OK - No reload alert from Chrome.")
 
 with open(path_to_csv, 'r') as mycsv:
     reader = csv.reader(mycsv)
@@ -64,10 +62,8 @@ with open(path_to_csv, 'r') as mycsv:
         driver.find_element_by_css_selector('[class="k-widget k-dropdown ic-can-be-dirty"]').click()
         time.sleep(1)
 
-        #ENTER EXPIRY MONTH OF CURRENT PERIOD
-        CurrentPeriodExp = str('October 2022')
-        
-        #FUTURE EXPIRY MONTH OF NEW PERIOD
+        # VARIABLES
+        CurrentPeriodExp = str('September 2022')
         FuturePeriodExp = str('December 2022')
         NewPeriodComment = str('Code Test')
 
@@ -107,3 +103,9 @@ with open(path_to_csv, 'r') as mycsv:
         time.sleep(0.5)
         driver.find_element(By.ID, "CommentSaveButton").click()
         time.sleep(0.5)
+
+        MCP = driver.find_element_by_xpath("//*[@id='TransactionPeriodGrid']/div[3]/table/tbody/tr[1]/td[1]/a")
+
+        with open("New Periods.csv","a+", newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow([MCP.text])
